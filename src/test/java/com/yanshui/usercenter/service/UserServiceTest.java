@@ -35,23 +35,23 @@ public class UserServiceTest {
 
     @Test
     void testUserRegister() {
-        String userAccount = "测试账户";
+        String userAccount = "testAccount1";
         userService.remove(new QueryWrapper<User>().eq("userAccount", userAccount));
         String userPassword = "testPassword";
         String checkPassword = "testPassword";
         long userId = userService.userRegister(userAccount, userPassword, checkPassword);
-        assertTrue(userId > 0, "用户注册失败，返回的用户ID应大于0");
+        assertTrue(userId > 0, "failed to register user");
         User user = userService.getById(userId);
-        assertNotNull(user, "注册后应能通过ID查询到用户");
-        assertEquals(userAccount, user.getUserAccount(), "注册的用户账号应与输入的账号一致");
-        assertTrue(userService.getById(userId).getUserPassword().startsWith("$2a$"), "密码应已加密");
+        assertNotNull(user, "the registered user should exist");
+        assertEquals(userAccount, user.getUserAccount(), "user account should match");
+        assertTrue(userService.getById(userId).getUserPassword().startsWith("$2a$"), "password should be encrypted");
     }
     @Test
     void testUserRegisterWithEmptyAccount() {
         Exception exception = assertThrows(IllegalArgumentException.class, () ->
             userService.userRegister("", "password123", "password123")
         );
-        assertTrue(exception.getMessage().contains("账号"));
+        assertTrue(exception.getMessage().contains("account"));
     }
 
     @Test
@@ -59,7 +59,7 @@ public class UserServiceTest {
         Exception exception = assertThrows(IllegalArgumentException.class, () ->
             userService.userRegister("testAccount2", "", "")
         );
-        assertTrue(exception.getMessage().contains("密码"));
+        assertTrue(exception.getMessage().contains("password"));
     }
 
     @Test
@@ -67,7 +67,7 @@ public class UserServiceTest {
         Exception exception = assertThrows(IllegalArgumentException.class, () ->
             userService.userRegister("testAccount3", "password123", "password456")
         );
-        assertTrue(exception.getMessage().contains("密码"));
+        assertTrue(exception.getMessage().contains("password"));
     }
 
     @Test
@@ -79,6 +79,6 @@ public class UserServiceTest {
         Exception exception = assertThrows(IllegalArgumentException.class, () ->
             userService.userRegister(userAccount, userPassword, userPassword)
         );
-        assertTrue(exception.getMessage().contains("已存在"));
+        assertTrue(exception.getMessage().contains("exists"));
     }
 }

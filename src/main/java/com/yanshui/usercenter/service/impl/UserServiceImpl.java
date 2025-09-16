@@ -10,11 +10,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+
 import static com.yanshui.usercenter.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
-* @author james
-* @description 针对表【user(用户)】的数据库操作Service实现
+* @author yanshui
+* @description for the table 【user】 database operation Service implementation
 * @createDate 2025-06-13 16:58:52
 */
 @Service
@@ -34,45 +37,48 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
 
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
-        // 1. 非空校验
+        // 1. no null check
         if (userAccount == null || userAccount.isEmpty()) {
-            throw new IllegalArgumentException("用户账号不能为空");
+            throw new IllegalArgumentException("user account cannot be empty");
         }
         if (userPassword == null || userPassword.isEmpty()) {
-            throw new IllegalArgumentException("用户密码不能为空");
+            throw new IllegalArgumentException("user password cannot be empty");
         }
         if (checkPassword == null || checkPassword.isEmpty()) {
-            throw new IllegalArgumentException("确认密码不能为空");
+            throw new IllegalArgumentException("check password cannot be empty");
         }
         if (!userPassword.equals(checkPassword)) {
-            throw new IllegalArgumentException("两次输入的密码不一致");
+            throw new IllegalArgumentException("the two passwords do not match");
         }
-        // 2. 账号格式和长度校验
+
+        // 2. account format and length check
         if (userAccount.length() < 4 || userAccount.length() > 20) {
-            throw new IllegalArgumentException("用户账号长度必须在4到20个字符之间");
+            throw new IllegalArgumentException("user account length must be between 4 and 20 characters");
         }
         if (!userAccount.matches("^[a-zA-Z0-9_\\u4e00-\\u9fa5]+$")) {
-            throw new IllegalArgumentException("用户账号不合法");
+            throw new IllegalArgumentException("illegal user account");
         }
-        // 3. 密码长度校验
+
+        // 3. password length check
         if (userPassword.length() < 8 || userPassword.length() > 20) {
-            throw new IllegalArgumentException("用户密码长度必须在8到20个字符之间");
+            throw new IllegalArgumentException("user password length must be between 8 and 20 characters");
         }
-        // 4. 检查账号是否已存在（数据库操作放最后）
+        // 4. check if account exists
         User existingUser = userMapper.selectOne(new QueryWrapper<User>().eq("userAccount", userAccount));
         if (existingUser != null) {
-            throw new IllegalArgumentException("用户账号已存在");
+            throw new IllegalArgumentException("user account already exists");
         }
-        // 5.密码加密
+
+        // 5. encrypt password
         String encryptedPassword = passwordEncoder.encode(userPassword);
-        // 6. 创建新用户
+        // 6. insert user into database
         User newUser = new User();
         newUser.setUserAccount(userAccount);
         newUser.setUserPassword(encryptedPassword);
         int result = userMapper.
                 insert(newUser);
         if (result <= 0) {
-            throw new RuntimeException("用户注册失败，请稍后再试");
+            throw new RuntimeException("failed to register user, please try again later");
         }
 
         return newUser.getId();
@@ -80,46 +86,49 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public User login(String userAccount, String userPassword, HttpServletRequest request) {
-        // 1. 非空校验
+        // 1. no null check
         if (userAccount == null || userAccount.isEmpty()) {
-            throw new IllegalArgumentException("用户账号不能为空");
+            throw new IllegalArgumentException("user account cannot be empty");
         }
         if (userPassword == null || userPassword.isEmpty()) {
-            throw new IllegalArgumentException("用户密码不能为空");
+            throw new IllegalArgumentException("user password cannot be empty");
         }
-        // 2. 账号格式和长度校验
+        // 2. account format and length check
         if (userAccount.length() < 4 || userAccount.length() > 20) {
-            throw new IllegalArgumentException("用户账号长度必须在4到20个字符之间");
+            throw new IllegalArgumentException("user account length must be between 4 and 20 characters");
         }
         if (!userAccount.matches("^[a-zA-Z0-9_\\u4e00-\\u9fa5]+$")) {
-            throw new IllegalArgumentException("用户账号不合规");
+            throw new IllegalArgumentException("illegal user account");
         }
-        // 3. 密码长度校验
+        // 3. password length check
         if (userPassword.length() < 8 || userPassword.length() > 20) {
-            throw new IllegalArgumentException("用户密码长度必须在8到20个字符之间");
+            throw new IllegalArgumentException("user password length must be between 8 and 20 characters");
         }
-        // 4. 检查账号是否存在
+        // 4. check if account exists
         User user = userMapper.selectOne(new QueryWrapper<User>()
                 .eq("userAccount", userAccount)
-        .eq("isDelete", 0)); // 确保查询未被删除的用户
+        .eq("isDelete", 0)); // ensure the user is not deleted
         if (user == null) {
-            throw new IllegalArgumentException("用户账号不存在");
+            throw new IllegalArgumentException("user account does not exist");
         }
-        // 5. 验证密码
+        // 5. verify password
         if (!passwordEncoder.matches(userPassword, user.getUserPassword())) {
-            throw new IllegalArgumentException("密码错误");
+            throw new IllegalArgumentException("incorrect password");
         }
 
+        // 6. update user status to logged in
+        user.setUserStatus(1); // set status to logged in
+        userMapper.updateById(user);
 
-        // 6. 记录登录状态
+        // 7. record user login state
         if (request == null) {
-            throw new IllegalArgumentException("请求对象不能为空");
+            throw new IllegalArgumentException("request cannot be null");
         }
         logger.info("Login userRole: {}", user.getUserRole());
         request.getSession().setAttribute(USER_LOGIN_STATE, user);
         logger.info("Session user: {}", request.getSession().getAttribute(USER_LOGIN_STATE));
 
-        // 7. 返回用户信息（脱敏处理）
+        // 8. masking data
         return getSafetyUser(user);
     }
 
@@ -131,22 +140,81 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User safetyUser = new User();
         safetyUser.setId(originUser.getId());
         safetyUser.setUsername(originUser.getUsername());
-
+        safetyUser.setAvatarUrl(originUser.getAvatarUrl());
+        safetyUser.setGender(originUser.getGender());
+        safetyUser.setPhone(originUser.getPhone());
+        safetyUser.setEmail(originUser.getEmail());
+        safetyUser.setUserStatus(originUser.getUserStatus());
+        safetyUser.setCreateTime(originUser.getCreateTime());
+        safetyUser.setUserRole(originUser.getUserRole());
         return safetyUser;
     }
 
     @Override
     public void userLogout(HttpServletRequest request) {
         if (request == null) {
-            throw new IllegalArgumentException("请求对象不能为空");
+            throw new IllegalArgumentException("invalid request");
         }
-        // 清除会话中的用户登录状态
+        // get user before removing session
+        User user = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (user != null) {
+            user.setUserStatus(0); // set status to logged out
+            userMapper.updateById(user);
+        }
+        // remove user login state
         request.getSession().removeAttribute(USER_LOGIN_STATE);
         logger.info("User logged out successfully");
     }
 
+    /**
+     * Update user info for the logged-in user
+     */
+    public User updateUserInfo(User updateUser, HttpServletRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("request cannot be null");
+        }
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (userObj == null || !(userObj instanceof User)) {
+            throw new IllegalArgumentException("user not logged in");
+        }
+        User currentUser = (User) userObj;
+        // Only allow updating safe fields
+        if (updateUser.getUsername() != null) {
+            currentUser.setUsername(updateUser.getUsername());
+        }
+        if (updateUser.getAvatarUrl() != null) {
+            currentUser.setAvatarUrl(updateUser.getAvatarUrl());
+        }
+        if (updateUser.getGender() != null) {
+            currentUser.setGender(updateUser.getGender());
+        }
+        if (updateUser.getPhone() != null) {
+            currentUser.setPhone(updateUser.getPhone());
+        }
+        if (updateUser.getEmail() != null) {
+            currentUser.setEmail(updateUser.getEmail());
+        }
+        // Save changes to DB
+        int result = userMapper.updateById(currentUser);
+        if (result <= 0) {
+            throw new RuntimeException("failed to update user info");
+        }
+        return getSafetyUser(currentUser);
+    }
+
+    @Override
+    public boolean logicDeleteUsers(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return false;
+        }
+        for (Long userId : userIds) {
+            User user = userMapper.selectById(userId);
+            if (user != null && (user.getIsDelete() == null || user.getIsDelete() == 0)) {
+                user.setIsDelete(1);
+                userMapper.updateById(user);
+            }
+        }
+        return true;
+    }
+
 }
-
-
-
-

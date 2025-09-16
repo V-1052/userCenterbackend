@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 用户
+ * user
  * @TableName user
  */
 @TableName(value = "user")
@@ -21,73 +21,73 @@ public class User {
     private Long id;
 
     /**
-     * 用户昵称
+     * username
      */
     @TableField(value = "username")
     private String username;
 
     /**
-     * 账号
+     * userAccount
      */
     @TableField(value = "userAccount")
     private String userAccount;
 
     /**
-     * 用户头像
+     * userAvatarUrl
      */
     @TableField(value = "avatarUrl")
     private String avatarUrl;
 
     /**
-     * 性别
+     * gender
      */
     @TableField(value = "gender")
     private Integer gender;
 
     /**
-     * 密码
+     * userPassword
      */
     @TableField(value = "userPassword")
     private String userPassword;
 
     /**
-     * 电话
+     * phone
      */
     @TableField(value = "phone")
     private String phone;
 
     /**
-     * 邮箱
+     * email
      */
     @TableField(value = "email")
     private String email;
 
     /**
-     * 状态 0 - 正常
+     * userStatus 0-normal 1-banned
      */
     @TableField(value = "userStatus")
     private Integer userStatus;
 
     /**
-     * 创建时间
+     * createTime
      */
     @TableField(value = "createTime")
     private Date createTime;
 
     /**
-     * 更新时间
+     * updateTime
      */
     @TableField(value = "updateTime")
     private Date updateTime;
 
     /**
-     * 是否删除
+     * isDelete 0-not deleted 1-deleted
      */
     @TableField(value = "isDelete")
     private Integer isDelete;
 
     /**
-     * 是否管理员
+     * userRole 0-default 1-admin
      */
     @TableField(value = "userRole")
     private Integer userRole;

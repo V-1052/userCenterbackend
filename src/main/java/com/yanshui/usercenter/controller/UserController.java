@@ -15,13 +15,14 @@ import java.util.List;
 import static com.yanshui.usercenter.constant.UserConstant.USER_LOGIN_STATE;
 import static com.yanshui.usercenter.constant.UserConstant.USER_ROLE_ADMIN;
 
-/** * 用户控制器
- * 处理用户相关的请求
- * @author james
+/** * user controller
+ * process user registration, login, search, delete, logout
+ * @author yanshui
  * @date 2025-06-13
  */
 @RestController
 @RequestMapping("/user")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true", maxAge = 3600)
 public class UserController {
 
     @Resource
@@ -32,7 +33,7 @@ public class UserController {
     @PostMapping("/register")
     public Long register(@RequestBody UserRegisterRequest request) {
         if (request == null) {
-            throw new IllegalArgumentException("请求参数不能为空");
+            throw new IllegalArgumentException("non-null request required");
         }
         return userService.userRegister(
                 request.getUserAccount(),
@@ -43,47 +44,69 @@ public class UserController {
     @PostMapping("/login")
     public Long userLogin(@RequestBody UserLoginRequest request, HttpServletRequest httpRequest) {
         if (request == null) {
-            throw new IllegalArgumentException("请求参数不能为空");
+            throw new IllegalArgumentException("non-null request required");
         }
         User user = userService.login(
                 request.getUserAccount(),
                 request.getUserPassword(),
                 httpRequest);
         if (user == null) {
-            throw new IllegalArgumentException("登录失败，用户不存在或密码错误");
+            throw new IllegalArgumentException("login failed" );
         }
-        return user.getId(); // 返回用户ID或null
+        return user.getId();
     }
     @GetMapping("/search")
     public List<User> searchUsers(@RequestParam String username, HttpServletRequest request) {
         if (!isAdmin(request)) {
-            throw new IllegalArgumentException("无权限访问");
+            throw new IllegalArgumentException("insufficient permissions" );
         }
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("isDelete", 0); // filter out deleted users
         if (username != null && !username.isEmpty()) {
             queryWrapper.like("username", username);
         }
         List<User> userList = userService.list(queryWrapper);
         return userList.stream()
-                .map(user -> userService.getSafetyUser(user)) // 避免敏感信息泄露
+                .map(user -> userService.getSafetyUser(user))
                 .toList();
     }
     @PostMapping("/delete")
     public List<User> deleteUser(@RequestBody List<Long> userIds, HttpServletRequest request) {
         if (!isAdmin(request)) {
-            throw new IllegalArgumentException("无权限访问");
+            throw new IllegalArgumentException("insufficient permissions" );
         }
         if (userIds == null || userIds.isEmpty()) {
-            throw new IllegalArgumentException("用户ID列表不能为空");
+            throw new IllegalArgumentException("user ID list cannot be empty" );
         }
-        return userService.removeByIds(userIds) ? userService.listByIds(userIds) : null;
+        boolean success = userService.logicDeleteUsers(userIds);
+        // Return all users that are not deleted
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("isDelete", 0);
+        List<User> userList = userService.list(queryWrapper);
+        return userList.stream()
+                .map(user -> userService.getSafetyUser(user))
+                .toList();
     }
 
     @PostMapping("/logout")
     public String userLogout(HttpServletRequest request) {
         userService.userLogout(request);
-        return "注销成功";
+        return "logout successful";
     }
+
+
+    @GetMapping("/current")
+    public User getCurrentUser(HttpServletRequest request) {
+        User currentUser = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (currentUser == null) {
+            return null;
+        }
+        User user = userService.getById(currentUser.getId());
+
+        // Todo check if the user is valid
+        return userService.getSafetyUser(user);
+    }
+
 
     private boolean isAdmin(HttpServletRequest request) {
         User user = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
@@ -91,6 +114,14 @@ public class UserController {
         logger.info("Session user: {}", request.getSession().getAttribute(USER_LOGIN_STATE));
 
         return user != null && user.getUserRole() == USER_ROLE_ADMIN;
+    }
+
+    @PostMapping("/update")
+    public User updateUser(@RequestBody User updateUser, HttpServletRequest request) {
+        if (updateUser == null) {
+            throw new IllegalArgumentException("non-null request required");
+        }
+        return userService.updateUserInfo(updateUser, request);
     }
 
 }

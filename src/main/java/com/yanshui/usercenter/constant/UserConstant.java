@@ -3,18 +3,18 @@ package com.yanshui.usercenter.constant;
 public interface UserConstant {
 
     /**
-     * 用户登录状态
+     * user login state key
      */
-    String USER_LOGIN_STATE = "userLoginState";
+    String USER_LOGIN_STATE = "user logged in";
 
 
     /**
-     * 用户角色：普通用户
+     * user role：normal user
      */
     int USER_ROLE_NORMAL = 0;
 
     /**
-     * 用户角色：管理员
+     * user role：admin
      */
     int USER_ROLE_ADMIN = 1;
 }
