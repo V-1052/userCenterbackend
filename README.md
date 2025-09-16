@@ -13,7 +13,7 @@
 
 ---
 
-## 🏗 Tech Stack | 技术栈
+## 🏗 Tech Stack
 
 - **Language**: Java
 - **Build**: Maven
@@ -22,18 +22,3 @@
 - **ORM**: MyBatis
 
 ---
-
-## 📦 Project Layout | 项目结构
-
-userCenterbackend/
-├─ src/
-│ ├─ main/
-│ │ ├─ java/ # Java sources
-│ │ └─ resources/ # configs (application.yml/properties), etc.
-│ └─ test/ # tests
-├─ pom.xml # Maven project file
-├─ mvnw / mvnw.cmd # Maven Wrapper
-└─ .gitignore, .gitattributes, ...
-
-
-
