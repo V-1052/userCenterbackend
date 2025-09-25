@@ -12,10 +12,15 @@ public class WebConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
+                String frontendOrigin = System.getenv("FRONTEND_ORIGIN");
+                if (frontendOrigin == null || frontendOrigin.isBlank()) {
+                    frontendOrigin = "http://localhost:3000";
+                }
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:3000")
+                        .allowedOrigins(frontendOrigin)           // 具体域名
+                        .allowedMethods("GET","POST","PUT","DELETE","PATCH","OPTIONS")
+                        .allowedHeaders("Content-Type","Authorization","X-Requested-With")
                         .allowCredentials(true)
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .maxAge(3600);
             }
         };
