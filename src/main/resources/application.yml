@@ -13,8 +13,17 @@ server:
   servlet:
     session:
       timeout: 30m
+  error:
+    include-message: always
+    include-binding-errors: always
+logging:
+  level:
+    com.yanshui: DEBUG
+    org.apache.ibatis: DEBUG
+    com.fasterxml.jackson.databind: INFO
 mybatis-plus:
   configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     global-config:
       db-config:
         logic-delete-type: isDelete
