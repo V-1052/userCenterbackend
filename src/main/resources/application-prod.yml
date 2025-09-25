@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: useR-center
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${JAWSDB_URL}
+  session:
+    timeout: 86400
