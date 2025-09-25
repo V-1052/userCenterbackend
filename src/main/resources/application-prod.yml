@@ -12,5 +12,22 @@ spring:
       max-lifetime: 300000
       keepalive-time: 120000
       leak-detection-threshold: 20000
-  session:
-    timeout: 86400
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-type: isDelete
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+server:
+  servlet:
+    session:
+      timeout: 86400s
+      cookie:
+        same-site: "None"
+        secure: true
+        http-only: true
+  forward-headers-strategy: native
