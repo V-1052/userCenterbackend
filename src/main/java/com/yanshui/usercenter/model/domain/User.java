@@ -13,7 +13,7 @@ import lombok.Data;
  */
 @TableName(value = "user")
 @Data
-public class User {
+public class User implements java.io.Serializable {
     /**
      * id
      */
