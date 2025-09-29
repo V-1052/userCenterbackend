@@ -22,7 +22,7 @@ import static com.yanshui.usercenter.constant.UserConstant.USER_ROLE_ADMIN;
  */
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true", maxAge = 3600)
+@CrossOrigin(origins = {"http://localhost:3000", "https://usercenter-frontend-89e77fb22c09.herokuapp.com"}, allowCredentials = "true", maxAge = 3600)
 public class UserController {
 
     @Resource
@@ -97,13 +97,14 @@ public class UserController {
 
     @GetMapping("/current")
     public User getCurrentUser(HttpServletRequest request) {
+        String sessionId = request.getSession().getId();
+        logger.info("Session ID: {}", sessionId);
+        logger.info("Session USER_LOGIN_STATE: {}", request.getSession().getAttribute(USER_LOGIN_STATE));
         User currentUser = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
         if (currentUser == null) {
             return null;
         }
         User user = userService.getById(currentUser.getId());
-
-        // Todo check if the user is valid
         return userService.getSafetyUser(user);
     }
 
