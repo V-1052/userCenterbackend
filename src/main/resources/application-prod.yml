@@ -32,6 +32,3 @@ server:
         http-only: true
   forward-headers-strategy: native
 
-spring:
-  session:
-    store-type: none

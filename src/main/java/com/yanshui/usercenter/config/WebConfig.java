@@ -17,7 +17,7 @@ public class WebConfig {
                     frontendOrigin = "http://localhost:3000";
                 }
                 registry.addMapping("/**")
-                        .allowedOrigins(frontendOrigin)           // 具体域名
+                        .allowedOrigins(frontendOrigin)
                         .allowedMethods("GET","POST","PUT","DELETE","PATCH","OPTIONS")
                         .allowedHeaders("Content-Type","Authorization","X-Requested-With")
                         .allowCredentials(true)
