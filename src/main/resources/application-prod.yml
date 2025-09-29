@@ -27,7 +27,7 @@ server:
     session:
       timeout: 86400s
       cookie:
-        same-site: "None"
+        same-site: None
         secure: true
         http-only: true
   forward-headers-strategy: native
