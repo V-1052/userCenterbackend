@@ -43,7 +43,7 @@ public class UserController {
     }
     @PostMapping("/login")
     public Long userLogin(@RequestBody UserLoginRequest request, HttpServletRequest httpRequest) {
-        String sessionId = httpRequest.getSession().getId();
+        String sessionId = request.getSession().getId();
         logger.info("Session ID: {}", sessionId);
         if (request == null) {
             throw new IllegalArgumentException("non-null request required");
